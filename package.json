@@ -1,0 +1,27 @@
+{
+  "name": "fc-node",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "t-Robots",
+  "license": "ISC",
+  "dependencies": {
+    "define-constant": "^1.0.0",
+    "dotenv": "8.0.0",
+    "express": "4.17.1",
+    "helmet": "^3.12.0",
+    "jsonwebtoken": "^8.2.0",
+    "mediasoup": "^3.2.5",
+    "moment": "*",
+    "mysql2": "*",
+    "rootpath": "0.1.2",
+    "sequelize": "5.13.1",
+    "socket.io": "^2.2.0"
+  }
+}
