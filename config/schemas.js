@@ -12,7 +12,8 @@ const VideoRooms = sequelize.define(withPrefix('video_rooms'), {
     description: Sequelize.TEXT,
     consumers: Sequelize.JSON,
     start_at: Sequelize.DATE,
-    duration: Sequelize.INTEGER
+    duration: Sequelize.INTEGER,
+    publish: Sequelize.BOOLEAN
 }, { underscored: true, freezeTableName: true, paranoid: true, timestamps: true });
 
 const Users = sequelize.define(withPrefix('users'), {

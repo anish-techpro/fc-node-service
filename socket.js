@@ -117,8 +117,8 @@ function assignEvents(socket, io) {
 
         'reconnectPeer': async (data, callback) => {
             console.log('RECONNECTING_PEER');
-            await room.addPeerToRoom(data.roomId, data.peerId);
-            socket.broadcast.emit('reconnectPeer', { roomId: data.roomId, userId: socket.info.user.id });
+            await room.addPeerToRoom(data.roomId, socket.info.user.id);
+            socket.broadcast.emit('reconnectPeer', { socketId: socket.id, roomId: data.roomId, userId: socket.info.user.id });
             if (callback) { callback(); }
         },
 

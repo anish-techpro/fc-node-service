@@ -16,6 +16,10 @@ module.exports = async (socket, next) => {
             const user = await User.getById(userId);
             const moment = require('moment');
             const now = moment();
+            if (!videoRoom || !videoRoom.publish) {
+                next(new Error('Session does not exist.'));
+                return;
+            }
             const isParticipant = (videoRoom.consumers.includes(userId) || videoRoom.host_id == userId);
             const sessionHasStarted = moment(videoRoom.start_at).isSameOrBefore(now);
             const sessionHasNotEnded = moment(videoRoom.start_at).add(videoRoom.duration, 'hours').isSameOrAfter(now);
