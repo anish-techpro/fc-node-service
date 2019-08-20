@@ -4,6 +4,8 @@ const room = require('lib/room');
 const moment = require('moment');
 const VideoRoom = require('models/video-room');
 
+const users = {};
+
 module.exports = (httpsServer) => {
     const socketServer = io(httpsServer, {
         serveClient: false,
@@ -14,18 +16,26 @@ module.exports = (httpsServer) => {
     socketServer
         .use(auth)
         .on('connection', (socket) => {
-            console.log('client connected');
-            console.log(socket.info);
+            console.log('client connected', socket.info.user.id);
+            if (socket.info.error) {
+                switch (socket.info.error.type) {
+                    case 'ALREADY_IN_SESSION':
+                        socket.emit('alreadyInSession');
+                        break;
+                }
+            } else {
+                socket.emit('newProducer');
+            }
             assignEvents(socket, socketServer);
         });
 };
 
 function assignEvents(socket, io) {
     const events = {
-        'user_info': id => {
-            console.log('setting user id');
-            socket.id = id;
-        },
+        // 'user_info': id => {
+        //     console.log('setting user id');
+        //     socket.info.user.id = id;
+        // },
 
         'connect_error': (err) => {
             console.error('client connection error', err);
@@ -53,12 +63,12 @@ function assignEvents(socket, io) {
         },
 
         'joinRoom': async (data, callback) => {
-            await room.addPeerToRoom(data.roomId, socket.id);
+            await room.addPeerToRoom(data.roomId, socket.info.user.id);
             callback();
         },
 
         'isCreator': async (data, callback) => {
-            const value = await room.isCreator(data.roomId, socket.id);
+            const value = await room.isCreator(data.roomId, socket.info.user.id);
             callback(value);
         },
 
@@ -67,33 +77,37 @@ function assignEvents(socket, io) {
             callback(value.rtpCapabilities);
         },
 
+        'hasConsumers': async (data, callback) => {
+            callback(room.hasConsumers(data.roomId, socket.info.user.id));
+        },
+
         'createTransport': async (data, callback) => {
-            const transport = await room.createWebRtcTransport(data.roomId, socket.id);
+            const transport = await room.createWebRtcTransport(data.roomId, socket.info.user.id);
             callback(transport);
         },
 
         'connectTransport': async (data, callback) => {
-            await room.connectTransport(data.roomId, socket.id, data.transportId, data.dtlsParameters);
+            await room.connectTransport(data.roomId, socket.info.user.id, data.transportId, data.dtlsParameters);
             callback();
         },
 
         'produce': async (data, callback) => {
             const { roomId, kind, transportId, rtpParameters } = data;
-            const producer = await room.createProducer(roomId, socket.id, transportId, kind, rtpParameters);
+            const producer = await room.createProducer(roomId, socket.info.user.id, transportId, kind, rtpParameters);
             callback(producer);
             console.log('newProducer');
-            socket.broadcast.emit('newProducer');
+            io.emit('newProducer');
         },
 
         'togglePlayProducer': async (data, callback) => {
             const { roomId, play } = data;
-            await room.togglePlayProducer(roomId, socket.id, play);
+            await room.togglePlayProducer(roomId, socket.info.user.id, play);
             callback();
         },
 
         'consume': async (data, callback) => {
             const { roomId, producerPeerId, transportId, producerId, rtpCapabilities } = data;
-            const value = await room.createConsumer(roomId, socket.id, producerPeerId, transportId, producerId, rtpCapabilities);
+            const value = await room.createConsumer(roomId, socket.info.user.id, producerPeerId, transportId, producerId, rtpCapabilities);
             callback(value);
         },
 
@@ -101,9 +115,16 @@ function assignEvents(socket, io) {
             callback();
         },
 
+        'reconnectPeer': async (data, callback) => {
+            console.log('RECONNECTING_PEER');
+            await room.addPeerToRoom(data.roomId, data.peerId);
+            socket.broadcast.emit('reconnectPeer', { roomId: data.roomId, userId: socket.info.user.id });
+            if (callback) { callback(); }
+        },
+
         'removePeerFromRoom': async (data, callback) => {
             console.log('REMOVE_PEER_FROM_ROOM');
-            await room.removePeer(data.roomId, socket.id);
+            await room.removePeer(data.roomId, socket.info.user.id);
             callback();
         },
 

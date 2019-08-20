@@ -20,10 +20,10 @@ module.exports = async (socket, next) => {
             const sessionHasStarted = moment(videoRoom.start_at).isSameOrBefore(now);
             const sessionHasNotEnded = moment(videoRoom.start_at).add(videoRoom.duration, 'hours').isSameOrAfter(now);
             const isValid = isParticipant && sessionHasStarted && sessionHasNotEnded;
+            let error = null;
             if (isValid) {
                 const roomExist = await room.roomExist(roomId);
                 if (!roomExist) {
-                    console.log(socket.handshake.address);
                     await room.createRoom(roomId, videoRoom.host_id);
                     await room.addPeerToRoom(roomId, userId);
                 } else {
@@ -31,14 +31,17 @@ module.exports = async (socket, next) => {
                     if (!userAddedToRoom) {
                         await room.addPeerToRoom(roomId, userId);
                     } else {
-                        next(new Error('You are already in a session.'));
-                        return;
+                        error = {
+                            type: 'ALREADY_IN_SESSION',
+                            message: 'You are already in a session.'
+                        };
                     }
                 }
-                socket.id = userId;
+                // socket.id = userId;
                 socket.info = {
                     roomId,
-                    user
+                    user,
+                    error
                 }
                 next();
             } else if (!isParticipant) {
