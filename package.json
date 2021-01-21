@@ -22,6 +22,6 @@
     "mysql2": "*",
     "rootpath": "0.1.2",
     "sequelize": "5.13.1",
-    "socket.io": "^2.2.0"
+    "socket.io": "^2.4.0"
   }
 }
