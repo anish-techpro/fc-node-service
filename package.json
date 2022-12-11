@@ -14,7 +14,7 @@
   "dependencies": {
     "define-constant": "^1.0.0",
     "dotenv": "8.0.0",
-    "express": "4.17.1",
+    "express": "4.17.3",
     "helmet": "^3.12.0",
     "jsonwebtoken": "^8.2.0",
     "mediasoup": "^3.2.5",
